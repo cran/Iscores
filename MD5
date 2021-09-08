@@ -1,0 +1,12 @@
+cc964394f57ca2b2332f2ca47f8af6d5 *DESCRIPTION
+eaf8ef1ef01acd987d3f6beb2313df07 *NAMESPACE
+ca15332d15b6d90ab1f098f185bee4c4 *R/Iscores.R
+360d482a4028a6c8d7adab22e05c979a *R/helpers.R
+70fe2a80db0456ea026776089ab4365e *README.md
+e4ceeea8bd7b476ec933049b45c67aed *man/Iscores.Rd
+e49815aca09c16b5709180ad878cbfa4 *man/combine2Forests.Rd
+1ca9dfcc2740d509802d0eb099a1e512 *man/combineForests.Rd
+97dcb9a558d883c73e073f60ba8d1764 *man/compute_drScore.Rd
+5a9f1035589da0db25fa8e1c2306e318 *man/densityRatioScore.Rd
+2f1c90dddfb08c7f931a605b1fcf213f *man/predict.crf.Rd
+f5cdfa4e31de4e093c034ea1e52c8372 *man/truncProb.Rd
