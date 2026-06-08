@@ -1,0 +1,419 @@
+---
+title: "Energy-I-Score: First Steps"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Energy-I-Score: First Steps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+The `Iscores` package provides tools for evaluating imputation methods using 
+Imputation Scores (IScores). In particular, the package implements the 
+DR I-Score and energy-I-Score, which measure the quality of imputed datasets by 
+comparing the relationships between observed and imputed values. The methodology 
+is described in detail in @näf2022imputationscores and @näf2025rankimputationmethods.
+
+The package supports:
+
+- numerical datasets,
+- mixed datasets containing both numerical and categorical variables,
+- evaluation of a single imputation method,
+- comparison of multiple imputation methods.
+
+The main functions are:
+
+- `energy_IScore()` — calculates the Energy-I-Score for a single imputation method,
+- `compare_Iscores()` — compares several imputation methods using selected IScores.
+
+This vignette presents the basic workflow for computing Imputation Scores and
+comparing imputation approaches. 
+
+## Installation
+
+The stable version of the package can be installed from CRAN (soon):
+
+```{r, eval = FALSE}
+install.packages("Iscores")
+```
+
+
+The development version can be installed from GitHub:
+
+```{r, eval = FALSE}
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+devtools::install_github("missValTeam/Iscores")
+```
+
+After installation, load the package and set a random seed to ensure reproducibility:
+
+```{r, message=FALSE, warning=FALSE}
+library(Iscores)
+```
+
+
+## Preparing data
+
+The package expects a `data.frame` containing missing values represented as `NA`.
+
+Numerical variables should be stored as numeric vectors. Categorical variables 
+should be stored as factors if they are intended to be treated as categorical 
+during score calculation.
+
+For demonstration purposes, we use some randomly generated data with MCAR missings:
+
+
+```{r}
+set.seed(10)
+
+X <- random_mcar_data(100, 4)
+
+head(X)
+```
+
+
+## Imputation Function
+
+Before computing an Imputation Score, we first need to define the **imputation method** 
+that will be applied to the incomplete dataset. The `Iscores` package is flexible 
+and allows the user to evaluate any imputation approach, provided that the imputation 
+function satisfies a few simple requirements.
+
+Your imputation function:
+
+1. **Must accept** a dataset with missing values as its first argument.
+2. **Must return** a completed dataset with the same dimensions as the input data.
+3. **Should return a dataset without missing values**.
+4. Can represent:
+- a simple custom imputation strategy,
+- a wrapper around an external function, package or programming language.
+
+
+For example, let's define *zero imputation* below:
+
+
+```{r}
+impute_zero <- function(X) { 
+  
+  X[is.na(X)] <- 0
+  
+  return(X) 
+}
+```
+
+The function can now be passed directly to `energy_IScore()`, `DR_IScore()`, or `compare_Iscores()`.
+
+
+## Calculating the energy-I-Score
+
+Once an imputation function has been defined, we can evaluate it using
+`energy_IScore()`.
+
+In the example below, we calculate the energy-I-Score for the
+`impute_zero()` method.
+
+```{r}
+sc <- energy_IScore(X = X, imputation_func = impute_zero)
+
+sc
+```
+
+The result is a single weighted score summarizing the imputation performance
+across all variables containing missing values.
+
+In addition, detailed information for each variable is returned as an
+attribute of the result. This table contains:
+
+- the variable-specific scores,
+- aggregation weights,
+- the number of variables used during training.
+
+The table can be accessed using `attr()`:
+
+```{r}
+attr(sc, "dat")
+```
+
+Note that the weighted score is simply a weighted mean of scores for particular 
+variables:
+
+```{r}
+sum(attr(sc, "dat")[["score"]] * attr(sc, "dat")[["weight"]]) / sum(attr(sc, "dat")[["weight"]])
+```
+
+
+### Important parameters
+
+The `energy_IScore()` function exposes several parameters that control the
+scoring procedure.
+
+#### Number of imputations: `N`
+
+The parameter `N` controls how many times the missing part is re-imputed
+during score estimation.
+
+This parameter is mainly relevant for stochastic or multiple imputation
+methods. For deterministic methods, setting `multiple = FALSE` automatically
+forces `N = 1`.
+
+```{r, warning=FALSE, message=FALSE}
+energy_IScore(X = X, imputation_func = impute_zero, N = 5)
+```
+
+> Note that hen `N = 1`, or when the imputation method always returns the same completed
+dataset, the predictive distribution is effectively represented by a single
+point estimate. In such cases, the energy-I-Score is computed from a degenerate 
+empirical distribution, which may provide a less reliable approximation of uncertainty.
+Consequently, the score naturally favors imputation methods that generate
+realistic variability and sample well from the conditional distribution of
+the missing values, rather than methods that always return fixed imputations.
+
+
+
+#### Limiting the number of scored variables: `max_length`
+
+For datasets with many incomplete variables, score computation may become
+time-consuming.
+
+The `max_length` argument allows the user to limit the number of variables
+used during score calculation. Variables with the largest number of missing
+values are selected first.
+
+By default, `max_length = NULL`, meaning that all incomplete variables are
+included.
+
+```{r, warning=FALSE, message=FALSE}
+energy_IScore(X = X, imputation_func = impute_zero, max_length = 2)
+```
+
+#### Handling incomplete training sets: `skip_if_needed`
+
+Some variables may not have enough fully observed predictors available for
+training.
+
+In such situations:
+
+- `skip_if_needed = TRUE` (default) removes a minimal number of observations
+to construct a valid training set,
+
+- `skip_if_needed = FALSE` returns `NA` for variables where no complete
+predictors can be identified.
+
+#### Scaling variables: `scale`
+
+Setting `scale = TRUE` standardizes variables internally before score
+calculation.
+
+This can be useful when variables have very different numerical ranges,
+preventing large-scale variables from dominating the score.
+
+
+### Energy-I-Score for mixed data
+
+As mentioned earlier, categorical variables must be stored as factors in order
+to be handled correctly by `energy_IScore()`. If the input data contains at least one factor variable, `energy_IScore()` automatically switches to the mixed-data version of the score. Therefore, users do not need to call a separate function for mixed datasets.
+
+Below we construct a simple mixed dataset containing both numerical and
+categorical variables. Missing values are generated according to the MCAR
+mechanism.
+
+```{r}
+set.seed(10)
+
+X_cat <- random_mcar_mixed_data(100, 4)
+
+head(X_cat)
+```
+
+We use a simple median/mode imputation function. Numerical variables are imputed
+with the median, while factor variables are imputed with the most frequent
+category.
+
+```{r}
+impute_mean_mode <- median_mode_imputation
+```
+
+The score can be calculated with the same public function as for numerical data:
+
+```{r}
+energy_IScore(X = X_cat, imputation_func = impute_mean_mode)
+```
+
+Internally, categorical variables are transformed using one-hot encoding and
+the score is then computed through multivariate energy distances.
+
+For additional implementation details and methodological discussion, see the
+vignette *"Energy-I-Score: Implementation Details"*.
+
+## Calculating the DR-I-Score
+
+The package also provides the `DR_IScore()` function based on density-ratio 
+estimation and random projection forests.
+
+```{r}
+sc_dr <- DR_IScore(X = X,
+                   imputation_func = impute_zero,
+                   m = 3,
+                   n_proj = 10,
+                   n_trees_per_proj = 2,
+                   n_cores = 1)
+
+sc_dr
+```
+
+Unlike `energy_IScore()`, which evaluates predictive distributions through
+scoring rules, `DR_IScore()` compares the distributions of observed and
+imputed data using projected random forests and density-ratio estimation.
+
+The parameter `m` controls the number of imputed datasets generated by the
+imputation method. Increasing `m` may improve score stability for stochastic
+imputation procedures.
+
+### Parameters
+
+The parameters `n_proj` and `n_trees_per_proj` control the complexity of the
+random projection forests used internally:
+
+- larger `n_proj` increases the number of random projections considered,
+- larger `n_trees_per_proj` increases the number of trees grown for each
+  projection.
+
+Increasing these parameters may improve stability and precision of the score,
+but also increases computational cost.
+
+
+
+## Comparing multiple imputation methods
+
+The `compare_Iscores()` function can be used to compare several imputation 
+methods simultaneously.
+
+Below we define two additional imputation strategies from `mice` package.
+
+```{r, warning=FALSE, message=FALSE}
+library(mice)
+
+
+impute_mice_norm <- function(X) {
+  imp <- mice(X, m = 1, method = "norm", maxit = 5, printFlag = FALSE)
+  
+  complete(imp)
+}
+
+impute_mice_rf <- function(X) {
+  imp <- mice(X, m = 1, method = "rf", maxit = 5, printFlag = FALSE)
+  
+  complete(imp)
+}
+```
+
+Now we place the methods in a named list:
+
+```{r}
+methods_list <- list(zero = impute_zero,
+                     mice_norm = impute_mice_norm,
+                     mice_rf = impute_mice_rf)
+```
+
+We can now compare the methods using the energy-I-Score:
+
+```{r}
+sc_comparison <- compare_Iscores(X = X,
+                                 methods_list = methods_list,
+                                 score = "energy_IScore",
+                                 N = 10,
+                                 silent = TRUE)
+
+sc_comparison
+```
+
+The resulting data frame contains one row per imputation method.
+
+
+
+
+
+## Comparing methods using multiple scores
+
+The package also allows simultaneous comparison using multiple scoring rules.
+
+```{r}
+comparison_all <- compare_Iscores(X = X,
+                                  methods_list = methods_list,
+                                  score = c("energy_IScore", "DR_IScore"),
+                                  N = 10,
+                                  m = 3,
+                                  n_proj = 10,
+                                  n_trees_per_proj = 2,
+                                  silent = TRUE)
+
+comparison_all
+```
+
+When multiple scores are requested, additional arguments passed to
+`compare_Iscores()` are automatically forwarded to the corresponding scoring
+functions.
+
+In the example above:
+
+- `N` and `silent` are arguments used by `energy_IScore()`,
+- `m`, `n_proj`, and `n_trees_per_proj` are arguments used by `DR_IScore()`.
+
+Therefore, when combining several scoring rules, users should provide the
+parameters required for each selected score.
+
+
+
+
+
+## Summary of best practices
+
+- Use `multiple = TRUE` with a genuinely multiple imputers and determine `N` for stable estimates.
+
+- Consider `scale = TRUE` when mixing variables on different scales.
+
+- Use `max_length` for quick experiments; remove it for final runs.
+
+- Keep `skip_if_needed = TRUE` unless you explicitly want to flag unscorable columns with NA.
+
+
+## Energy score
+
+If you have access to the original dataset before imputation, you can also use the energy distance as an additional evaluation metric. Our package provides an easy-to-use wrapper `edistance()` around the `energy::eqdist.e` function from the energy package. 
+
+```{r}
+
+X_observed <- matrix(rnorm(2000), ncol = 4)  
+
+X_miss <- X_observed
+X_miss[runif(nrow(X_miss) * ncol(X_miss)) < 0.2] <- NA
+
+edistance(X_observed, impute_zero(X_miss))
+
+edistance(X_observed, impute_mice_norm(X_miss))
+
+```
+
+
+# References
+
+
+
+
+
+
+
+
+
+

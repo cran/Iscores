@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Energy-I-Score: First Steps</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Energy-I-Score: First Steps</h1>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The <code>Iscores</code> package provides tools for evaluating
+imputation methods using Imputation Scores (IScores). In particular, the
+package implements the DR I-Score and energy-I-Score, which measure the
+quality of imputed datasets by comparing the relationships between
+observed and imputed values. The methodology is described in detail in
+<span class="citation">Näf et al. (2022)</span> and <span class="citation">Näf, Grzesiak, and Scornet (2025)</span>.</p>
+<p>The package supports:</p>
+<ul>
+<li>numerical datasets,</li>
+<li>mixed datasets containing both numerical and categorical
+variables,</li>
+<li>evaluation of a single imputation method,</li>
+<li>comparison of multiple imputation methods.</li>
+</ul>
+<p>The main functions are:</p>
+<ul>
+<li><code>energy_IScore()</code> — calculates the Energy-I-Score for a
+single imputation method,</li>
+<li><code>compare_Iscores()</code> — compares several imputation methods
+using selected IScores.</li>
+</ul>
+<p>This vignette presents the basic workflow for computing Imputation
+Scores and comparing imputation approaches.</p>
+</div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<p>The stable version of the package can be installed from CRAN
+(soon):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;Iscores&quot;</span>)</span></code></pre></div>
+<p>The development version can be installed from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;devtools&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">&quot;devtools&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;missValTeam/Iscores&quot;</span>)</span></code></pre></div>
+<p>After installation, load the package and set a random seed to ensure
+reproducibility:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(Iscores)</span></code></pre></div>
+</div>
+<div id="preparing-data" class="section level2">
+<h2>Preparing data</h2>
+<p>The package expects a <code>data.frame</code> containing missing
+values represented as <code>NA</code>.</p>
+<p>Numerical variables should be stored as numeric vectors. Categorical
+variables should be stored as factors if they are intended to be treated
+as categorical during score calculation.</p>
+<p>For demonstration purposes, we use some randomly generated data with
+MCAR missings:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">10</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">random_mcar_data</span>(<span class="dv">100</span>, <span class="dv">4</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">head</span>(X)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;            X1         X2         X3         X4</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 1  0.01874617 -0.7618043  1.2155138  1.5025446</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 2 -0.18425254  0.4193754  0.3308765         NA</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 3 -1.37133055         NA  1.3902751 -0.6306855</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 4          NA  0.7115740  0.8720470  0.7923495</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 5  0.29454513         NA -1.0808170         NA</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 6  0.38979430  0.5631747  0.4958216  0.3227550</span></span></code></pre></div>
+</div>
+<div id="imputation-function" class="section level2">
+<h2>Imputation Function</h2>
+<p>Before computing an Imputation Score, we first need to define the
+<strong>imputation method</strong> that will be applied to the
+incomplete dataset. The <code>Iscores</code> package is flexible and
+allows the user to evaluate any imputation approach, provided that the
+imputation function satisfies a few simple requirements.</p>
+<p>Your imputation function:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Must accept</strong> a dataset with missing values as its
+first argument.</li>
+<li><strong>Must return</strong> a completed dataset with the same
+dimensions as the input data.</li>
+<li><strong>Should return a dataset without missing
+values</strong>.</li>
+<li>Can represent:</li>
+</ol>
+<ul>
+<li>a simple custom imputation strategy,</li>
+<li>a wrapper around an external function, package or programming
+language.</li>
+</ul>
+<p>For example, let’s define <em>zero imputation</em> below:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>impute_zero <span class="ot">&lt;-</span> <span class="cf">function</span>(X) { </span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  X[<span class="fu">is.na</span>(X)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  </span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">return</span>(X) </span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>}</span></code></pre></div>
+<p>The function can now be passed directly to
+<code>energy_IScore()</code>, <code>DR_IScore()</code>, or
+<code>compare_Iscores()</code>.</p>
+</div>
+<div id="calculating-the-energy-i-score" class="section level2">
+<h2>Calculating the energy-I-Score</h2>
+<p>Once an imputation function has been defined, we can evaluate it
+using <code>energy_IScore()</code>.</p>
+<p>In the example below, we calculate the energy-I-Score for the
+<code>impute_zero()</code> method.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">energy_IScore</span>(<span class="at">X =</span> X, <span class="at">imputation_func =</span> impute_zero)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>sc</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.799712</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;dat&quot;)</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;    column_id weight     score n_columns_used</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; X1         1 0.1771 0.7738732              1</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; X3         3 0.1771 0.7737987              1</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; X2         2 0.1539 0.7941482              1</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; X4         4 0.1411 0.8707366              1</span></span></code></pre></div>
+<p>The result is a single weighted score summarizing the imputation
+performance across all variables containing missing values.</p>
+<p>In addition, detailed information for each variable is returned as an
+attribute of the result. This table contains:</p>
+<ul>
+<li>the variable-specific scores,</li>
+<li>aggregation weights,</li>
+<li>the number of variables used during training.</li>
+</ul>
+<p>The table can be accessed using <code>attr()</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">attr</span>(sc, <span class="st">&quot;dat&quot;</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt;    column_id weight     score n_columns_used</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; X1         1 0.1771 0.7738732              1</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; X3         3 0.1771 0.7737987              1</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; X2         2 0.1539 0.7941482              1</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; X4         4 0.1411 0.8707366              1</span></span></code></pre></div>
+<p>Note that the weighted score is simply a weighted mean of scores for
+particular variables:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">attr</span>(sc, <span class="st">&quot;dat&quot;</span>)[[<span class="st">&quot;score&quot;</span>]] <span class="sc">*</span> <span class="fu">attr</span>(sc, <span class="st">&quot;dat&quot;</span>)[[<span class="st">&quot;weight&quot;</span>]]) <span class="sc">/</span> <span class="fu">sum</span>(<span class="fu">attr</span>(sc, <span class="st">&quot;dat&quot;</span>)[[<span class="st">&quot;weight&quot;</span>]])</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.799712</span></span></code></pre></div>
+<div id="important-parameters" class="section level3">
+<h3>Important parameters</h3>
+<p>The <code>energy_IScore()</code> function exposes several parameters
+that control the scoring procedure.</p>
+<div id="number-of-imputations-n" class="section level4">
+<h4>Number of imputations: <code>N</code></h4>
+<p>The parameter <code>N</code> controls how many times the missing part
+is re-imputed during score estimation.</p>
+<p>This parameter is mainly relevant for stochastic or multiple
+imputation methods. For deterministic methods, setting
+<code>multiple = FALSE</code> automatically forces
+<code>N = 1</code>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">energy_IScore</span>(<span class="at">X =</span> X, <span class="at">imputation_func =</span> impute_zero, <span class="at">N =</span> <span class="dv">5</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.799712</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;dat&quot;)</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;    column_id weight     score n_columns_used</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; X1         1 0.1771 0.7738732              1</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; X3         3 0.1771 0.7737987              1</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; X2         2 0.1539 0.7941482              1</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; X4         4 0.1411 0.8707366              1</span></span></code></pre></div>
+<blockquote>
+<p>Note that hen <code>N = 1</code>, or when the imputation method
+always returns the same completed dataset, the predictive distribution
+is effectively represented by a single point estimate. In such cases,
+the energy-I-Score is computed from a degenerate empirical distribution,
+which may provide a less reliable approximation of uncertainty.
+Consequently, the score naturally favors imputation methods that
+generate realistic variability and sample well from the conditional
+distribution of the missing values, rather than methods that always
+return fixed imputations.</p>
+</blockquote>
+</div>
+<div id="limiting-the-number-of-scored-variables-max_length" class="section level4">
+<h4>Limiting the number of scored variables:
+<code>max_length</code></h4>
+<p>For datasets with many incomplete variables, score computation may
+become time-consuming.</p>
+<p>The <code>max_length</code> argument allows the user to limit the
+number of variables used during score calculation. Variables with the
+largest number of missing values are selected first.</p>
+<p>By default, <code>max_length = NULL</code>, meaning that all
+incomplete variables are included.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">energy_IScore</span>(<span class="at">X =</span> X, <span class="at">imputation_func =</span> impute_zero, <span class="at">max_length =</span> <span class="dv">2</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.773836</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;dat&quot;)</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt;    column_id weight     score n_columns_used</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; X1         1 0.1771 0.7738732              1</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; X3         3 0.1771 0.7737987              1</span></span></code></pre></div>
+</div>
+<div id="handling-incomplete-training-sets-skip_if_needed" class="section level4">
+<h4>Handling incomplete training sets: <code>skip_if_needed</code></h4>
+<p>Some variables may not have enough fully observed predictors
+available for training.</p>
+<p>In such situations:</p>
+<ul>
+<li><p><code>skip_if_needed = TRUE</code> (default) removes a minimal
+number of observations to construct a valid training set,</p></li>
+<li><p><code>skip_if_needed = FALSE</code> returns <code>NA</code> for
+variables where no complete predictors can be identified.</p></li>
+</ul>
+</div>
+<div id="scaling-variables-scale" class="section level4">
+<h4>Scaling variables: <code>scale</code></h4>
+<p>Setting <code>scale = TRUE</code> standardizes variables internally
+before score calculation.</p>
+<p>This can be useful when variables have very different numerical
+ranges, preventing large-scale variables from dominating the score.</p>
+</div>
+</div>
+<div id="energy-i-score-for-mixed-data" class="section level3">
+<h3>Energy-I-Score for mixed data</h3>
+<p>As mentioned earlier, categorical variables must be stored as factors
+in order to be handled correctly by <code>energy_IScore()</code>. If the
+input data contains at least one factor variable,
+<code>energy_IScore()</code> automatically switches to the mixed-data
+version of the score. Therefore, users do not need to call a separate
+function for mixed datasets.</p>
+<p>Below we construct a simple mixed dataset containing both numerical
+and categorical variables. Missing values are generated according to the
+MCAR mechanism.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">10</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>X_cat <span class="ot">&lt;-</span> <span class="fu">random_mcar_mixed_data</span>(<span class="dv">100</span>, <span class="dv">4</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="fu">head</span>(X_cat)</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt;          col1       col2      col3       col4 col5</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt; 1  0.01874617 -0.7618043        NA         NA    1</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt; 2 -0.18425254         NA 0.3308765  0.5904095    3</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; 3 -1.37133055 -1.0399434 1.3902751 -0.6306855 &lt;NA&gt;</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; 4 -0.59916772  0.7115740 0.8720470  0.7923495    4</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; 5  0.29454513         NA        NA  0.1253846 &lt;NA&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; 6  0.38979430  0.5631747 0.4958216         NA    3</span></span></code></pre></div>
+<p>We use a simple median/mode imputation function. Numerical variables
+are imputed with the median, while factor variables are imputed with the
+most frequent category.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>impute_mean_mode <span class="ot">&lt;-</span> median_mode_imputation</span></code></pre></div>
+<p>The score can be calculated with the same public function as for
+numerical data:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">energy_IScore</span>(<span class="at">X =</span> X_cat, <span class="at">imputation_func =</span> impute_mean_mode)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co">#&gt; Factor variables detected.</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt;              Calculating the energy-I-Score for mixed data.</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; [1] 0.8155521</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; attr(,&quot;dat&quot;)</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt;      column_id weight     score n_columns_used</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; col3         3 0.1924 0.7758805              1</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt; col1         1 0.1771 0.7280336              1</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt; col5         5 0.1539 0.9428090              1</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; col2         2 0.1411 0.8319434              1</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt; col4         4 0.1411 0.8243028              1</span></span></code></pre></div>
+<p>Internally, categorical variables are transformed using one-hot
+encoding and the score is then computed through multivariate energy
+distances.</p>
+<p>For additional implementation details and methodological discussion,
+see the vignette <em>“Energy-I-Score: Implementation Details”</em>.</p>
+</div>
+</div>
+<div id="calculating-the-dr-i-score" class="section level2">
+<h2>Calculating the DR-I-Score</h2>
+<p>The package also provides the <code>DR_IScore()</code> function based
+on density-ratio estimation and random projection forests.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>sc_dr <span class="ot">&lt;-</span> <span class="fu">DR_IScore</span>(<span class="at">X =</span> X,</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>                   <span class="at">imputation_func =</span> impute_zero,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>                   <span class="at">m =</span> <span class="dv">3</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>                   <span class="at">n_proj =</span> <span class="dv">10</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>                   <span class="at">n_trees_per_proj =</span> <span class="dv">2</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>                   <span class="at">n_cores =</span> <span class="dv">1</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>sc_dr</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co">#&gt; [1] -8.327919</span></span></code></pre></div>
+<p>Unlike <code>energy_IScore()</code>, which evaluates predictive
+distributions through scoring rules, <code>DR_IScore()</code> compares
+the distributions of observed and imputed data using projected random
+forests and density-ratio estimation.</p>
+<p>The parameter <code>m</code> controls the number of imputed datasets
+generated by the imputation method. Increasing <code>m</code> may
+improve score stability for stochastic imputation procedures.</p>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<p>The parameters <code>n_proj</code> and <code>n_trees_per_proj</code>
+control the complexity of the random projection forests used
+internally:</p>
+<ul>
+<li>larger <code>n_proj</code> increases the number of random
+projections considered,</li>
+<li>larger <code>n_trees_per_proj</code> increases the number of trees
+grown for each projection.</li>
+</ul>
+<p>Increasing these parameters may improve stability and precision of
+the score, but also increases computational cost.</p>
+</div>
+</div>
+<div id="comparing-multiple-imputation-methods" class="section level2">
+<h2>Comparing multiple imputation methods</h2>
+<p>The <code>compare_Iscores()</code> function can be used to compare
+several imputation methods simultaneously.</p>
+<p>Below we define two additional imputation strategies from
+<code>mice</code> package.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>impute_mice_norm <span class="ot">&lt;-</span> <span class="cf">function</span>(X) {</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  imp <span class="ot">&lt;-</span> <span class="fu">mice</span>(X, <span class="at">m =</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="st">&quot;norm&quot;</span>, <span class="at">maxit =</span> <span class="dv">5</span>, <span class="at">printFlag =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  </span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="fu">complete</span>(imp)</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>}</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>impute_mice_rf <span class="ot">&lt;-</span> <span class="cf">function</span>(X) {</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  imp <span class="ot">&lt;-</span> <span class="fu">mice</span>(X, <span class="at">m =</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="st">&quot;rf&quot;</span>, <span class="at">maxit =</span> <span class="dv">5</span>, <span class="at">printFlag =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  </span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>  <span class="fu">complete</span>(imp)</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>}</span></code></pre></div>
+<p>Now we place the methods in a named list:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>methods_list <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">zero =</span> impute_zero,</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>                     <span class="at">mice_norm =</span> impute_mice_norm,</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>                     <span class="at">mice_rf =</span> impute_mice_rf)</span></code></pre></div>
+<p>We can now compare the methods using the energy-I-Score:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>sc_comparison <span class="ot">&lt;-</span> <span class="fu">compare_Iscores</span>(<span class="at">X =</span> X,</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>                                 <span class="at">methods_list =</span> methods_list,</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>                                 <span class="at">score =</span> <span class="st">&quot;energy_IScore&quot;</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>                                 <span class="at">N =</span> <span class="dv">10</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>                                 <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method zero ...</span></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method mice_norm ...</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method mice_rf ...</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>sc_comparison</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#&gt;       score    score_name    method</span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#&gt; 1 0.7997120 energy_IScore      zero</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#&gt; 2 0.6247271 energy_IScore mice_norm</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#&gt; 3 0.6839281 energy_IScore   mice_rf</span></span></code></pre></div>
+<p>The resulting data frame contains one row per imputation method.</p>
+</div>
+<div id="comparing-methods-using-multiple-scores" class="section level2">
+<h2>Comparing methods using multiple scores</h2>
+<p>The package also allows simultaneous comparison using multiple
+scoring rules.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>comparison_all <span class="ot">&lt;-</span> <span class="fu">compare_Iscores</span>(<span class="at">X =</span> X,</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>                                  <span class="at">methods_list =</span> methods_list,</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>                                  <span class="at">score =</span> <span class="fu">c</span>(<span class="st">&quot;energy_IScore&quot;</span>, <span class="st">&quot;DR_IScore&quot;</span>),</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>                                  <span class="at">N =</span> <span class="dv">10</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>                                  <span class="at">m =</span> <span class="dv">3</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>                                  <span class="at">n_proj =</span> <span class="dv">10</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>                                  <span class="at">n_trees_per_proj =</span> <span class="dv">2</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>                                  <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method zero ...</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method mice_norm ...</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="co">#&gt; Calculating the energy_IScore for method mice_rf ...</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="co">#&gt; Calculating the DR_IScore for method zero ...</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="co">#&gt; Calculating the DR_IScore for method mice_norm ...</span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="co">#&gt; Calculating the DR_IScore for method mice_rf ...</span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>comparison_all</span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="co">#&gt;        score    score_name    method</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="co">#&gt; 1  0.7997120 energy_IScore      zero</span></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="co">#&gt; 2  0.6473443 energy_IScore mice_norm</span></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="co">#&gt; 3  0.6753519 energy_IScore   mice_rf</span></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="co">#&gt; 4 -9.2208219     DR_IScore      zero</span></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="co">#&gt; 5  1.4280980     DR_IScore mice_norm</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="co">#&gt; 6  2.4883888     DR_IScore   mice_rf</span></span></code></pre></div>
+<p>When multiple scores are requested, additional arguments passed to
+<code>compare_Iscores()</code> are automatically forwarded to the
+corresponding scoring functions.</p>
+<p>In the example above:</p>
+<ul>
+<li><code>N</code> and <code>silent</code> are arguments used by
+<code>energy_IScore()</code>,</li>
+<li><code>m</code>, <code>n_proj</code>, and
+<code>n_trees_per_proj</code> are arguments used by
+<code>DR_IScore()</code>.</li>
+</ul>
+<p>Therefore, when combining several scoring rules, users should provide
+the parameters required for each selected score.</p>
+</div>
+<div id="summary-of-best-practices" class="section level2">
+<h2>Summary of best practices</h2>
+<ul>
+<li><p>Use <code>multiple = TRUE</code> with a genuinely multiple
+imputers and determine <code>N</code> for stable estimates.</p></li>
+<li><p>Consider <code>scale = TRUE</code> when mixing variables on
+different scales.</p></li>
+<li><p>Use <code>max_length</code> for quick experiments; remove it for
+final runs.</p></li>
+<li><p>Keep <code>skip_if_needed = TRUE</code> unless you explicitly
+want to flag unscorable columns with NA.</p></li>
+</ul>
+</div>
+<div id="energy-score" class="section level2">
+<h2>Energy score</h2>
+<p>If you have access to the original dataset before imputation, you can
+also use the energy distance as an additional evaluation metric. Our
+package provides an easy-to-use wrapper <code>edistance()</code> around
+the <code>energy::eqdist.e</code> function from the energy package.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>X_observed <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">2000</span>), <span class="at">ncol =</span> <span class="dv">4</span>)  </span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>X_miss <span class="ot">&lt;-</span> X_observed</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>X_miss[<span class="fu">runif</span>(<span class="fu">nrow</span>(X_miss) <span class="sc">*</span> <span class="fu">ncol</span>(X_miss)) <span class="sc">&lt;</span> <span class="fl">0.2</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="fu">edistance</span>(X_observed, <span class="fu">impute_zero</span>(X_miss))</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="co">#&gt; E-statistic </span></span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a><span class="co">#&gt;    4.360287</span></span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a><span class="fu">edistance</span>(X_observed, <span class="fu">impute_mice_norm</span>(X_miss))</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a><span class="co">#&gt; E-statistic </span></span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a><span class="co">#&gt;   0.5447785</span></span></code></pre></div>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-näf2025rankimputationmethods" class="csl-entry">
+Näf, Jeffrey, Krystyna Grzesiak, and Erwan Scornet. 2025. <span>“How to
+Rank Imputation Methods?”</span> <a href="https://arxiv.org/abs/2507.11297">https://arxiv.org/abs/2507.11297</a>.
+</div>
+<div id="ref-näf2022imputationscores" class="csl-entry">
+Näf, Jeffrey, Meta-Lina Spohn, Loris Michel, and Nicolai Meinshausen.
+2022. <span>“Imputation Scores.”</span> <a href="https://arxiv.org/abs/2106.03742">https://arxiv.org/abs/2106.03742</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

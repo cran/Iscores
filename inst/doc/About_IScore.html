@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Energy-I-Score: Implementation Details</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Energy-I-Score: Implementation Details</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This vignette presents the implementation details of the
+<em>energy-I-Score</em>, a metric designed to evaluate the quality of
+imputation methods in incomplete datasets.</p>
+<p>The score is based on the concept of energy distance between observed
+and imputed distributions. It allows comparing the uncertainty induced
+by the imputation model with the variability present in the observed
+data. The procedure is model-agnostic: it can be used with any
+imputation method <span class="math inline">\(\mathcal{I}\)</span> and
+with multiple imputation draws.</p>
+<p>The score is distribution-free and can be applied to:</p>
+<ul>
+<li>continuous variables,</li>
+<li>mixed-type data (here the score is calculated on dummy
+variables),</li>
+<li>multiple imputation methods.</li>
+</ul>
+<hr />
+<div id="notation" class="section level2">
+<h2>Notation</h2>
+<p>Let <span class="math inline">\(X \in \mathbb{R}^{n \times
+p}\)</span> be an original dataset with missing values, <span class="math inline">\(\tilde{X} \in \mathbb{R}^{n \times p}\)</span> be
+an imputed dataset, <span class="math inline">\(\mathcal{I}\)</span>
+imputation function, and <span class="math inline">\(N\)</span> the
+number of imputations drawn from <span class="math inline">\(\mathcal{I}\)</span>.</p>
+<p>Then, for each variable with missing values <span class="math inline">\(j \in \{1, \ldots, p\}\)</span> we define <span class="math inline">\(L_j\)</span> as a set of indices <span class="math inline">\(i\)</span> for which <span class="math inline">\(X_{i,j}\)</span> is observed, <span class="math inline">\(L_j^c\)</span> being a set of indices <span class="math inline">\(i\)</span> for which <span class="math inline">\(X_{i,j}\)</span> is missing and <span class="math inline">\(O_j\)</span> a set of fully observed predictor
+variables for rows with <span class="math inline">\(X_{i,j}\)</span>
+observed.</p>
+<p>Finally, we define the set of variables with missing values as <span class="math inline">\(\mathcal{S} = \{ j : L_j^c \neq \emptyset
+\}\)</span>.</p>
+<hr />
+</div>
+<div id="algorithm-overview" class="section level2">
+<h2>Algorithm Overview</h2>
+<p>The <em>energy-I-Score</em> is computed iteratively for each variable
+with missing data. The following steps are performed for each <span class="math inline">\(j \in \mathcal{S}\)</span>.</p>
+<div id="step-1-selection-of-predictor-set" class="section level3">
+<h3>Step 1: Selection of Predictor Set</h3>
+<p>We determine the set of predictor variables: <span class="math display">\[
+O_j = \bigcap_{m \in L_j} \{ l : m_l = 0 \}.
+\]</span></p>
+<p>If <span class="math inline">\(O_j\)</span> is empty, the algorithm
+automatically selects a fallback variable <span class="math inline">\(k^*\)</span> defined as: <span class="math display">\[
+k^* = \text{argmax}_{k \neq j} \big|\{ i : m_{i,\cdot} \in L_j \cap L_k
+\}\big|.
+\]</span> which is a variable with the largest number of observed values
+for the observed part of column <span class="math inline">\(j\)</span>.
+This ensures that the imputation model has at least one predictor.</p>
+</div>
+<div id="step-2-data-partitioning" class="section level3">
+<h3>Step 2: Data Partitioning</h3>
+<p>The data are split into training and test sets as follows:</p>
+<p><span class="math display">\[
+\text{Train} =
+\begin{bmatrix}
+\mathrm{NA} &amp; \tilde{X}_{L_j, O_j} \\
+\tilde{X}_{L_j^c, j} &amp; \tilde{X}_{L_j^c, O_j}
+\end{bmatrix},
+\quad
+\text{Test} =
+\begin{bmatrix}
+\tilde{X}_{L_j, j}
+\end{bmatrix}.
+\]</span></p>
+<ul>
+<li>The <strong>training set</strong> contains the observed predictor
+values and missing target values to be imputed.</li>
+<li>The <strong>test set</strong> contains the observed target values to
+evaluate imputation quality.</li>
+</ul>
+</div>
+<div id="step-3-multiple-imputations" class="section level3">
+<h3>Step 3: Multiple Imputations</h3>
+<p>The missing part of the training set is imputed <span class="math inline">\(N\)</span> times using <span class="math inline">\(\mathcal{I}\)</span>: <span class="math display">\[
+\tilde{X}_{i,j}^{(1)}, \ldots, \tilde{X}_{i,j}^{(N)} \sim
+H_{X_j|X_{O_j}, M_j = 1}.
+\]</span></p>
+<p>Each imputation represents a draw from the conditional distribution
+of the missing variable given the observed predictors.</p>
+</div>
+<div id="step-4-energy-distance-calculation" class="section level3">
+<h3>Step 4: Energy Distance Calculation</h3>
+<p>For each <span class="math inline">\(i \in L_j\)</span>, the
+<em>energy-I-Score</em> component is computed as: <span class="math display">\[
+\widehat{S}^j_{\mathrm{NA}}(H,P) =
+\frac{1}{|L_j|} \sum_{i \in L_j}
+\left[
+\frac{1}{2N^2} \sum_{l=1}^N \sum_{\ell=1}^N
+|\tilde{X}_{i,j}^{(l)} - \tilde{X}_{i,j}^{(\ell)}|
+-
+\frac{1}{N} \sum_{l=1}^N
+|\tilde{X}_{i,j}^{(l)} - x_{i,j}|
+\right].
+\]</span></p>
+<p>The first term is internal dispersion of the imputed values and the
+second term is distance between the imputed and the actual observations.
+The larger the score, the greater the uncertainty of the imputation
+relative to the true data.</p>
+</div>
+<div id="step-5-weighting" class="section level3">
+<h3>Step 5: Weighting</h3>
+<p>Each variable’s contribution to the final score is weighted by: <span class="math display">\[
+w_j = \frac{1}{n^2} |L_j| \cdot |L_j^c|.
+\]</span></p>
+<p>This accounts for the relative amount of missing and observed data
+per variable.</p>
+</div>
+<div id="step-6-final-score" class="section level3">
+<h3>Step 6: Final Score</h3>
+<p>The final <em>energy-I-Score</em> is a weighted average over all
+variables with missing values: <span class="math display">\[
+\widehat{S}_{\mathrm{NA}}(H,P) =
+\frac{1}{|\mathcal{S}|} \sum_{j \in \mathcal{S}}
+w_j \widehat{S}^j_{\mathrm{NA}}(H,P).
+\]</span></p>
+<p>This scalar measure summarizes the imputation uncertainty across the
+dataset.</p>
+<hr />
+</div>
+</div>
+<div id="practical-interpretation" class="section level2">
+<h2>Practical Interpretation</h2>
+<ul>
+<li><p>High values of the score suggest large variability or poor
+alignment between imputed and observed distributions.</p></li>
+<li><p>Low values indicate imputations that are close to the observed
+data distribution (better performance).</p></li>
+<li><p>Variables with few missing values have lower weight, while those
+with many missing values contribute more.</p></li>
+<li><p>Methods that do not rely on multiple imputation or have a
+weak/random draw mechanism tend to perform worse, because they
+underestimate the uncertainty of the missing values.</p></li>
+<li><p>The <em>energy-I-Score</em> should primarily be used to rank
+different imputation methods, rather than to interpret its absolute
+numeric value directly.</p></li>
+</ul>
+</div>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<p>This approach follows the methodology proposed by Näf, Grzesiak, and
+Scornet (2025) in “How to rank imputation methods?”
+(arXiv:2507.11297).</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
